@@ -95,6 +95,7 @@ void update_menu()
 	switch (menu) {
     case FOG_LAMP_H ... (MAX_CONTORLLER_TYPES-1):
     	controller_update_lcd(menu, EDIT);
+    	controller_beep(menu, SCROLL_BEEP);
     break;
 	}
 }
@@ -281,6 +282,10 @@ static void MX_TIM2_Init(void)
   /* USER CODE BEGIN TIM2_Init 1 */
   //TIM_CLK/(TIM_PSC+1)/(TIM_ARR + 1)
   //64MHZ/20000
+
+  //htim2.Init.Prescaler = 2943;
+  //htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  //htim2.Init.Period = 65216;
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 2943;
@@ -331,7 +336,7 @@ static void MX_TIM3_Init(void)
   htim3.Instance = TIM3;
   htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 20;
+  htim3.Init.Period = 25;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV4;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
@@ -425,8 +430,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RTB_CLK_Pin RTB_DT_Pin RTB_SW_Pin */
-  GPIO_InitStruct.Pin = RTB_CLK_Pin|RTB_DT_Pin|RTB_SW_Pin;
+  /*Configure GPIO pins : RTB_CLK_Pin RTB_DT_Pin */
+  GPIO_InitStruct.Pin = RTB_CLK_Pin|RTB_DT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -434,10 +439,13 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : RSW_Pin */
   GPIO_InitStruct.Pin = RSW_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(RSW_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
   HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
@@ -465,7 +473,7 @@ uint32_t cur, prev;
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	cur = HAL_GetTick();
-	if((GPIO_Pin == B1_Pin) && (cur - prev > 50))
+	if((GPIO_Pin == RSW_Pin) && (cur - prev > 50))
 	{
 		HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 		rsw = ON;

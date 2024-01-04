@@ -29,6 +29,8 @@ controller_get_name(enum controller_types type)
 		return "AMBIENT LIGHT";
 	case REAR_CAMERA:
 		return "REAR CAMERA";
+	case BUZZER:
+		return "CNTLR BUZZER";
 	default:
 		printf("Wrong Input\n\r");
 	}
@@ -48,6 +50,8 @@ controller_get_default_state(enum controller_types type)
 		return OFF;
 	case REAR_CAMERA:
 		return ON;
+	case BUZZER:
+		return ON;
 	default:
 		printf("Wrong Input\n\r");
 	}
@@ -58,7 +62,7 @@ void
 controller_init(void)
 {
 	uint8_t i;
-	for(i = 0; i < MAX_CONTORLLER_TYPES; i++)
+	for(i = FOG_LAMP_H; i < MAX_CONTORLLER_TYPES; i++)
 	{
 		//copy name
 		strcpy(dev[i].name, controller_get_name(i));
@@ -97,12 +101,17 @@ void controller_update_lcd(enum controller_types type, int mode)
     lcd_write_string(buf);
     lcd_set_cursor(1, 0);
 
-    if(mode == EDIT)
-    	sprintf(buf, "%s%s  -> EDIT", LCD_EMPTY_SPACE ,controller_get_current_state(type)? "ON": "OFF");
-    else
+    if(mode == EDIT) {
     	sprintf(buf, "%s%s", LCD_EMPTY_SPACE ,controller_get_current_state(type)? "ON": "OFF");
+    	lcd_write_string(buf);
+    	lcd_set_cursor(1, 9);
+    	lcd_write_string("-> EDIT");
+    }
+    else {
+    	sprintf(buf, "%s%s", LCD_EMPTY_SPACE ,controller_get_current_state(type)? "ON": "OFF");
+    	lcd_write_string(buf);
+    }
 
-    lcd_write_string(buf);
 }
 
 void controller_toggle_state(enum controller_types type)
@@ -112,6 +121,7 @@ void controller_toggle_state(enum controller_types type)
 		controller_set_current_state(type, OFF);
 	else
 		controller_set_current_state(type, ON);
+	controller_beep(type, SET_BEEP);
 }
 
 void controller_splash(void)
@@ -126,11 +136,20 @@ void controller_splash(void)
     HAL_Delay(1000);
 }
 
-uint32_t controller_get_encoder_period(void)
+void controller_beep(int type, int beep_type)
 {
-	uint32_t period = 0;
 	int i;
-	for(i = 0; i < MAX_CONTORLLER_TYPES; i++)
-		period |= 1 << i;
-	return period;
+	int state = controller_get_current_state(BUZZER);
+	if(!state)
+		return;
+	if(beep_type == SET_BEEP) {
+		printf("BUZZER SET\n\r");
+		HAL_Delay(100);
+	} else {
+		for(i = 0; i<type; i++ )
+		{
+			printf("BUZZER %d\n\r", i);
+			HAL_Delay(100);
+		}
+	}
 }

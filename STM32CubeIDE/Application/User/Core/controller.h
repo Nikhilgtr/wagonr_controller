@@ -17,6 +17,7 @@ enum controller_types {
 	DEFOGGER,
 	AMBIENT_LIGHT,
 	REAR_CAMERA,
+	BUZZER,
 	MAX_CONTORLLER_TYPES
 };
 
@@ -28,6 +29,11 @@ enum controller_state {
 enum controller_mode {
 	DUMP,
 	EDIT
+};
+
+enum controller_beep_type {
+	SET_BEEP,
+	SCROLL_BEEP
 };
 
 struct controller_dev {
@@ -46,6 +52,6 @@ void controller_toggle_state(enum controller_types type);
 
 void controller_splash(void);
 
-uint32_t controller_get_encoder_period(void);
+void controller_beep(int type, int beep_type);
 
 #endif /* APPLICATION_USER_CORE_CONTROLLER_H_ */

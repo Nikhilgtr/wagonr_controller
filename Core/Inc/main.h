@@ -70,10 +70,9 @@ void Error_Handler(void);
 #define RTB_CLK_GPIO_Port GPIOB
 #define RTB_DT_Pin GPIO_PIN_14
 #define RTB_DT_GPIO_Port GPIOB
-#define RTB_SW_Pin GPIO_PIN_15
-#define RTB_SW_GPIO_Port GPIOB
 #define RSW_Pin GPIO_PIN_8
 #define RSW_GPIO_Port GPIOC
+#define RSW_EXTI_IRQn EXTI9_5_IRQn
 #define TMS_Pin GPIO_PIN_13
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
