@@ -4,12 +4,12 @@
  *  Created on: Dec 27, 2023
  *      Author: Nikhilgtr
  */
-
 #include "controller.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include "lcd_i2c.h"
+
 
 #define LCD_EMPTY_SPACE "   "
 
@@ -58,16 +58,54 @@ controller_get_default_state(enum controller_types type)
 	return OFF;
 }
 
+struct controller_pin
+controller_get_gpio_pin(enum controller_types type)
+{
+	struct controller_pin op_pin = {0};
+	switch(type)
+	{
+	case FOG_LAMP_H:
+		op_pin.pin = RLY1_Pin;
+		op_pin.port = RLY1_GPIO_Port;
+		break;
+	case DEFOGGER:
+		op_pin.pin = RLY2_Pin;
+		op_pin.port = RLY2_GPIO_Port;
+		break;
+	case AMBIENT_LIGHT:
+		op_pin.pin = RLY3_Pin;
+		op_pin.port = RLY3_GPIO_Port;
+		break;
+	case REAR_CAMERA:
+		op_pin.pin = RLY4_Pin;
+		op_pin.port = RLY4_GPIO_Port;
+		break;
+	case BUZZER:
+		op_pin.pin = BUZZER_Pin;
+		op_pin.port = BUZZER_GPIO_Port;
+		break;
+	default:
+		printf("Wrong Input\n\r");
+	}
+	return op_pin;
+}
+
 void
 controller_init(void)
 {
 	uint8_t i;
 	for(i = FOG_LAMP_H; i < MAX_CONTORLLER_TYPES; i++)
 	{
-		//copy name
+
 		strcpy(dev[i].name, controller_get_name(i));
 		dev[i].state = controller_get_default_state(i);
+		dev[i].op_pin = controller_get_gpio_pin(i);
+		if(dev[i].state == ON)
+			controller_set_current_state(i,ON);
+		else
+			controller_set_current_state(i,OFF);
 	}
+	HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
 }
 
 void controller_dump_state(void)
@@ -90,6 +128,12 @@ void
 controller_set_current_state(enum controller_types type, int state)
 {
 	dev[type].state = state;
+	if(type != BUZZER)
+	{
+		HAL_GPIO_WritePin(dev[type].op_pin.port, dev[type].op_pin.pin,
+				dev[type].state?GPIO_PIN_RESET:GPIO_PIN_SET);
+	} else
+		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
 }
 
 void controller_update_lcd(enum controller_types type, int mode)
@@ -143,13 +187,16 @@ void controller_beep(int type, int beep_type)
 	if(!state)
 		return;
 	if(beep_type == SET_BEEP) {
-		printf("BUZZER SET\n\r");
-		HAL_Delay(100);
+		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+		HAL_Delay(30);
+		HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
 	} else {
 		for(i = 0; i<type; i++ )
 		{
-			printf("BUZZER %d\n\r", i);
-			HAL_Delay(100);
+			HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_RESET);
+			HAL_Delay(60);
+			HAL_GPIO_WritePin(BUZZER_GPIO_Port, BUZZER_Pin, GPIO_PIN_SET);
+			HAL_Delay(60);
 		}
 	}
 }

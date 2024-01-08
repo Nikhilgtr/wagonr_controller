@@ -9,6 +9,7 @@
 #define APPLICATION_USER_CORE_CONTROLLER_H_
 
 #include <stdint.h>
+#include "main.h"
 
 #define MAX_CONTROLLER_NAME 20
 
@@ -36,9 +37,15 @@ enum controller_beep_type {
 	SCROLL_BEEP
 };
 
+struct controller_pin {
+	uint16_t pin;
+	GPIO_TypeDef *port;
+};
+
 struct controller_dev {
 	char name[MAX_CONTROLLER_NAME];
 	int state;
+	struct controller_pin op_pin;
 };
 
 void
@@ -53,5 +60,7 @@ void controller_toggle_state(enum controller_types type);
 void controller_splash(void);
 
 void controller_beep(int type, int beep_type);
+
+void controller_set_current_state(enum controller_types type, int state);
 
 #endif /* APPLICATION_USER_CORE_CONTROLLER_H_ */
